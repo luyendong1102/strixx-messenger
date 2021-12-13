@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" rel="stylesheet">
+    <link rel="stylesheet" href="/resources/index.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
+    <title>strixMessenger</title>
+</head>
+
+<body>
+    <div id="header">
+        <span class="greeting" th:text="'Hello ' + ${username}"></span>
+        <p id="dess">Thank you for using my website.
+            Your privacy and security is my most concern, so all your message is full encrypted with AES-256, and so
+            more function to keep your conversation save.
+            This page help you to config your chat room, pull down and choose your favour.
+            <br>
+            Let's discover some wonderful with your friend.
+            Hope you enjoy it, if you like it, please consider donate me via mail : luyendong1102@gmail.com
+        </p>
+    </div>
+    <div class="config">
+        <p id="dec">Your friend's room id</p>
+        <form method="post" th:action="@{/invite}">
+            <input type="text" id="message" autocomplete="off" name="key" placeholder="Your invitation code" style="
+                                                                                        width: 68%;
+                                                                                        border: 2px solid;
+                                                                                        border-radius: 10px;
+                                                                                        font-size: 2vh;
+                                                                                        height: 6vh
+                                                                                      " />
+            <button type="submit" style="
+                                                                                      background-color:#8441ab; 
+                                                                                      color: #fff;  
+                                                                                      border-radius: 10px;  
+                                                                                      font-family: Readex Pro, sans-serif; 
+                                                                                      height: 6vh;
+                                                                                      font-size: 2vh
+                                                                                    ">GO GO</button>
+        </form>
+        <div style="margin-top: 2vh;">
+            <span>Or your can </span>
+            <button style="
+                            background-color:#8441ab; 
+                            color: #fff;  
+                            border-radius: 10px;  
+                            font-family: Readex Pro, sans-serif;
+                            margin-left: 1.0vh; 
+                            padding-left: 3vh;
+                            padding-right: 3vh;
+                            height: 6vh;
+                            font-size: 2vh" id="btnCreate">CREATE YOUR OWN ROOM</button>
+        </div>
+    </div>
+    <div class="chatconfig" id="chatconfig">
+        <div style="justify-content: flex-end;">
+            <div class="close" id="btnClose"></div>
+        </div>
+        <form style="position: relative; top: 30%; left: 5%" method="post" th:action="@{/createroom}">
+            <center>
+                <table>
+                    <tr>
+                        <td>Max member: </td>
+                        <td>
+                            <input type="text" name="rom_max_member" style="
+                                                                                width: 80%;
+                                                                                margin-left: 3%;
+                                                                                border: 2px solid;
+                                                                                border-radius: 10px;
+                                                                                font-size: 2vh;
+                                                                                height: 4vh"
+                                placeholder="default is 4" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <input type="checkbox" name="isLocked" />
+                            <span> Room will be locked when create</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <button type="submit" style="
+                                                                        background-color:#8441ab; 
+                                                                        color: #fff;  
+                                                                        border-radius: 10px;  
+                                                                        font-family: Readex Pro, sans-serif; 
+                                                                        height: 4vh;
+                                                                        margin-top: 20%;
+                                                                        width: 80%;
+                                                                        font-size: 2vh;
+                                                                        margin-top: 2vh;
+                                                                        ">GO GO</button>
+                        </td>
+                    </tr>
+                </table>
+            </center>
+        </form>
+    </div>
+    <script src="/resources/welcome.js"></script>
+</body>
+
+</html>

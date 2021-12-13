@@ -1,0 +1,271 @@
+'use strict';
+
+var messageForm = document.querySelector('#messageForm');
+var messageArea = document.querySelector('#messageArea');
+var messageContent = document.querySelector('#message');
+var connectingElement = document.querySelector('#connecting');
+var stompClient = null;
+var socket = new SockJS('/ws/message');
+var key = userid;
+key = key.replaceAll("-", "");
+key = key + global;
+key = key.substring(0, 32);
+var hashKey = CryptoJS.MD5(userid).toString();
+
+function connect() {
+    stompClient = Stomp.over(socket);
+    stompClient.connect({}, onConnected, onError);
+}
+
+console.log(hashKey);
+connect();
+
+function onConnected() {
+    stompClient.subscribe('/personal/msg/' + rroomid, onMessageReceived);
+    connectingElement.textContent = 'connected';
+    connectingElement.style.color = 'green'
+    var message = {
+        author: username,
+        content: null,
+        roomid: rroomid,
+        type: 'CONNECT',
+        userid: ''
+    };
+    stompClient.send("/app/send.entrypoint", {}, JSON.stringify(message));
+}
+
+
+function onError(error) {
+    connectingElement.textContent = 'disconnected';
+    connectingElement.style.color = 'red';
+}
+
+
+function sendMessage(event) {
+
+    // command section
+    if (stompClient) {
+        var message = {
+            author: username,
+            content: null,
+            roomid: rroomid,
+            type: null,
+            userid: ''
+        };
+
+        var uuid = document.createElement('span');
+        var context = document.createElement('p');
+        uuid.textContent = message.author + ': ';
+        var devision = document.createElement('div');
+        var li = document.createElement('li');
+
+        if (messageContent.value === '/LEAVE') {
+            message.type = 'LEAVE';
+            stompClient.send("/app/send.command", {}, JSON.stringify(message));
+            socket.close();
+            window.location.replace("/")
+        }
+
+        if (messageContent.value === '/INVITE') {
+            messageContent.value = '';
+            uuid.textContent = window.location.host + '/invite/' + rroomid;
+            uuid.setAttribute("id", "copyText");
+            uuid.setAttribute("onclick", "copyText();");
+            uuid.style.color = '#419CF2';
+            li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+            devision.appendChild(uuid);
+            li.appendChild(devision);
+            messageArea.appendChild(li);
+            messageArea.scrollTop = messageArea.scrollHeight;
+            event.preventDefault();
+            return;
+        }
+
+        if (messageContent.value === '/LOCK') {
+            message.type = 'LOCK';
+            stompClient.send("/app/send.command", {}, JSON.stringify(message));
+            messageContent.value = '';
+            event.preventDefault();
+            return;
+        }
+
+        if (messageContent.value === '/CURMEM') {
+            message.type = 'CURMEM';
+            stompClient.send("/app/send.command", {}, JSON.stringify(message));
+            messageContent.value = '';
+            event.preventDefault();
+            return;
+        }
+
+        if (messageContent.value === '/UNLOCK') {
+            message.type = 'UNLOCK';
+            stompClient.send("/app/send.command", {}, JSON.stringify(message));
+            messageContent.value = '';
+            event.preventDefault();
+            return;
+        }
+
+        if (messageContent.value === '/HELP') {
+            messageContent.value = '';
+            context.style.color = '#419CF2';
+            context.textContent =
+                "/INVITE : Generate an invitelink \n" +
+                "/LEAVE : Leave conversation \n" +
+                "/APPROVE : Permit join request \n" +
+                "/LOCK : Lock room only admin \n" +
+                "/UNLOCK : Lock room only admin";
+            devision.appendChild(context);
+            li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+            li.appendChild(devision);
+            messageArea.appendChild(li);
+            messageArea.scrollTop = messageArea.scrollHeight;
+            event.preventDefault();
+            return;
+        }
+
+        var encrypMessage = encrypt(key, messageContent.value);
+        console.log(encrypMessage)
+        message.content = encrypMessage;
+        message.type = 'CHAT';
+        stompClient.send("/app/send.chat", {}, JSON.stringify(message));
+
+    }
+
+    messageContent.value = '';
+    event.preventDefault();
+}
+
+function onMessageReceived(payload) {
+
+    var message = JSON.parse(payload.body);
+
+    var uuid = document.createElement('span');
+    var statusSpan = document.createElement('span');
+    var context = document.createElement('p');
+    uuid.style.color = '#B4EF57';
+    context.style.color = 'white';
+    uuid.textContent = message.author + ': ';
+    var devision = document.createElement('div');
+    var li = document.createElement('li');
+
+    if (message.type === 'APPROVED') {
+        uuid.textContent = message.author;
+        uuid.style.color = '#419CF2';
+        statusSpan.textContent = " JOINED";
+        statusSpan.style.color = 'green';
+        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+        devision.appendChild(uuid);
+        devision.appendChild(statusSpan);
+        li.appendChild(devision);
+
+        messageArea.appendChild(li);
+        messageArea.scrollTop = messageArea.scrollHeight;
+        return;
+    }
+
+    if (message.type === 'LEAVE') {
+
+        uuid.textContent = message.author;
+        uuid.style.color = '#419CF2';
+        statusSpan.textContent = " LEAVED";
+        statusSpan.style.color = 'red';
+        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+        devision.appendChild(uuid);
+        devision.appendChild(statusSpan);
+        li.appendChild(devision);
+
+        messageArea.appendChild(li);
+        messageArea.scrollTop = messageArea.scrollHeight;
+
+        if (message.userid === hashKey) {
+            socket.close();
+            window.location.replace("/")
+            return;
+        }
+
+        return;
+    }
+
+    if (message.type === 'PENDDING') {
+        uuid.textContent = message.author;
+        uuid.style.color = '#419CF2';
+        statusSpan.textContent = " WAITING FOR HOST";
+        statusSpan.style.color = 'green';
+        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+        devision.appendChild(uuid);
+        devision.appendChild(statusSpan);
+        li.appendChild(devision);
+
+        messageArea.appendChild(li);
+        messageArea.scrollTop = messageArea.scrollHeight;
+        return;
+    }
+
+    if (message.type === 'LOCK') {
+        statusSpan.textContent = "ROOM LOCKED";
+        statusSpan.style.color = 'green';
+        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+        devision.appendChild(uuid);
+        devision.appendChild(statusSpan);
+        li.appendChild(devision);
+
+        messageArea.appendChild(li);
+        messageArea.scrollTop = messageArea.scrollHeight;
+        return;
+    }
+
+    if (message.type === 'CURMEM') {
+        statusSpan.textContent = message.author;
+        statusSpan.style.color = 'green';
+        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+        devision.appendChild(uuid);
+        devision.appendChild(statusSpan);
+        li.appendChild(devision);
+
+        messageArea.appendChild(li);
+        messageArea.scrollTop = messageArea.scrollHeight;
+        return;
+    }
+
+    if (message.type === 'UNLOCK') {
+        statusSpan.textContent = "ROOM UNLOCKED";
+        statusSpan.style.color = 'red';
+        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+        devision.appendChild(uuid);
+        devision.appendChild(statusSpan);
+        li.appendChild(devision);
+
+        messageArea.appendChild(li);
+        messageArea.scrollTop = messageArea.scrollHeight;
+        return;
+    }
+
+
+    context.textContent = decrypt(key, message.content);
+    devision.setAttribute('id', 'mmessage');
+    devision.appendChild(uuid);
+    devision.appendChild(context);
+
+    if (message.userid !== hashKey) {
+
+        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+        li.appendChild(devision);
+
+        messageArea.appendChild(li);
+        messageArea.scrollTop = messageArea.scrollHeight;
+        return;
+
+    }
+
+    uuid.textContent = '';
+    devision.appendChild(uuid);
+    li.style = 'list-style-type:none; margin-top:10px; margin-right : 5%; justify-content: flex-end;';
+    li.appendChild(devision);
+    messageArea.appendChild(li);
+    messageArea.scrollTop = messageArea.scrollHeight;
+
+    return;
+}
+
+
+messageForm.addEventListener('submit', sendMessage, true);
