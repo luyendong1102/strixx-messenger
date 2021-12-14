@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 public class ErrorHandler {
 
-    @ExceptionHandler(ExceedMemberException.class)
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
     public String exceedMember (Exception e) {
         return "redirect:/error/" + e.getMessage();

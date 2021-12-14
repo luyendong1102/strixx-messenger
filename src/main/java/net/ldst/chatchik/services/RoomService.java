@@ -70,6 +70,9 @@ public class RoomService {
     }
 
     public Room AddFromWaitingList (User user, Room room) {
+        if (room.getWaiting() == null) {
+            room.setWaiting(new HashSet<>());
+        }
         room.getWaiting().forEach(
                 u -> {
                     if (u.getKey().equals(user.getKey())) {

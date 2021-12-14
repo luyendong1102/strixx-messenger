@@ -21,6 +21,7 @@ import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
+import java.util.Optional;
 import java.util.Set;
 
 @Controller
@@ -93,7 +94,15 @@ public class WebSocketController {
     public void testAddM(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) throws ExceedMemberException {
         String roomid = msg.getRoomid();
         User u = (User) accessor.getSessionAttributes().get("userinfor");
-        Room r = roomRepository.findByRoomId(roomid).get();
+        Optional<Room> rr = roomRepository.findByRoomId(roomid);
+
+        if (rr.isEmpty()) {
+            throw new ExceedMemberException();
+        }
+
+        Room r = rr.get();
+
+        log.info("userkey " + u.getKey());
         msg.setUserid(DigestUtils.md5DigestAsHex(u.getKey().getBytes(StandardCharsets.UTF_8)));
         if (u.getOwnroom() == null) {
             u.setOwnroom(new Room());
@@ -169,16 +178,17 @@ public class WebSocketController {
             r = roomService.RemoveUser(u, r);
 
 
+            if (u.getKey().equals(r.getOwner().getKey())) {
+                r.setOwner(r.getMembers().iterator().next());
+                log.info(roomRepository.save(r).getOwner().getUsername());
+                u.setOwnroom(null);
+                msg.setType(ChatMessage.MessageType.NEWLEAD);
+                operator.convertAndSendToUser(r.getMembers().iterator().next().getKey(), "/msg/" + roomid, msg);
+            }
+
             if (r.getMembers().size() == 0) {
                 roomRepository.delete(r);
                 return;
-            }
-
-            if (u.getKey().equals(r.getOwner().getKey())) {
-                r.setOwner(r.getMembers().iterator().next());
-                roomRepository.save(r);
-                msg.setType(ChatMessage.MessageType.NEWLEAD);
-                operator.convertAndSendToUser(r.getMembers().iterator().next().getKey(), "/msg/" + roomid, msg);
             }
 
             msg.setType(ChatMessage.MessageType.LEAVE);

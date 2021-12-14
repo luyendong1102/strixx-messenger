@@ -117,6 +117,7 @@ public class PageController {
     public String prePareChat (HttpServletRequest request, @PathVariable String roomid, Model model) {
         User u = (User) request.getSession().getAttribute("userinfor");
         if (u == null) {
+            log.info("new user");
             return "redirect:/prejoin/" + roomid;
         }
         return "redirect:/chat/" + roomid;
