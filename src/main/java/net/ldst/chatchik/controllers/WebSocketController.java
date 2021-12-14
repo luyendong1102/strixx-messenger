@@ -10,6 +10,7 @@ import net.ldst.chatchik.repositories.UserRepository;
 import net.ldst.chatchik.services.EncrypMessageService;
 import net.ldst.chatchik.services.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -99,11 +100,7 @@ public class WebSocketController {
         // when room is max
         if (r.getMembers().size() >= r.getMax_member()) {
             msg.setType(ChatMessage.MessageType.LEAVE);
-            r.getMembers().forEach(
-                    user -> {
-                        operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
-                    }
-            );
+            operator.convertAndSendToUser(u.getKey(), "/msg/" + roomid, msg);
             return;
         }
 
@@ -154,11 +151,23 @@ public class WebSocketController {
         // leave
         msg.setUserid(DigestUtils.md5DigestAsHex(u.getKey().getBytes(StandardCharsets.UTF_8)));
         if (msg.getType().equals(ChatMessage.MessageType.LEAVE)) {
+
             r = roomService.RemoveUser(u, r);
-            log.info(r.getMembers().size() + "");
+
+
             if (r.getMembers().size() == 0) {
                 roomRepository.delete(r);
+                return;
             }
+
+            if (u.getKey().equals(r.getOwner().getKey())) {
+                r.setOwner(r.getMembers().iterator().next());
+                roomRepository.save(r);
+                msg.setType(ChatMessage.MessageType.NEWLEAD);
+                operator.convertAndSendToUser(r.getMembers().iterator().next().getKey(), "/msg/" + roomid, msg);
+            }
+
+            msg.setType(ChatMessage.MessageType.LEAVE);
             r.getMembers().forEach(
                     user -> {
                         operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
@@ -169,7 +178,7 @@ public class WebSocketController {
 
         // lock
         if (msg.getType().equals(ChatMessage.MessageType.LOCK)) {
-            if (u.getOwnroom().getRoomid().equals(r.getRoomid())) {
+            if (r.getOwner().getKey().equals(u.getKey())) {
                 r.setIs_locked(true);
                 roomRepository.save(r);
                 r.getMembers().forEach(

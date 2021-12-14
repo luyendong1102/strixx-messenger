@@ -173,6 +173,18 @@ function onMessageReceived(payload) {
         return;
     }
 
+    if (message.type === 'NEWLEAD') {
+        statusSpan.textContent = "YOUR ARE NOW ADMIN";
+        statusSpan.style.color = 'green';
+        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
+        devision.appendChild(statusSpan);
+        li.appendChild(devision);
+
+        messageArea.appendChild(li);
+        messageArea.scrollTop = messageArea.scrollHeight;
+        return;
+    }
+
     if (message.type === 'LEAVE') {
 
         uuid.textContent = message.author;
@@ -327,5 +339,22 @@ function onMessageReceived(payload) {
     return;
 }
 
+window.addEventListener('beforeunload', function (e) {
+    if (stompClient) {
+        var message = {
+            author: username,
+            content: null,
+            roomid: rroomid,
+            type: null,
+            userid: ''
+        };
+
+        message.type = 'LEAVE';
+        stompClient.send("/app/send.command", {}, JSON.stringify(message));
+        socket.close();
+        window.location.replace("/")
+
+    }
+});
 
 messageForm.addEventListener('submit', sendMessage, true);
