@@ -177,6 +177,10 @@ public class WebSocketController {
 
             r = roomService.RemoveUser(u, r);
 
+            if (r.getMembers().size() == 0) {
+                roomRepository.delete(r);
+                return;
+            }
 
             if (u.getKey().equals(r.getOwner().getKey())) {
                 r.setOwner(r.getMembers().iterator().next());
@@ -184,11 +188,6 @@ public class WebSocketController {
                 u.setOwnroom(null);
                 msg.setType(ChatMessage.MessageType.NEWLEAD);
                 operator.convertAndSendToUser(r.getMembers().iterator().next().getKey(), "/msg/" + roomid, msg);
-            }
-
-            if (r.getMembers().size() == 0) {
-                roomRepository.delete(r);
-                return;
             }
 
             msg.setType(ChatMessage.MessageType.LEAVE);

@@ -21,7 +21,7 @@ public class Room {
     @Column(name = "roomid", unique = true)
     private String roomid;
 
-    @OneToOne(orphanRemoval = true)
+    @OneToOne
     @JoinColumn(name = "ownerid")
     private User owner;
 
