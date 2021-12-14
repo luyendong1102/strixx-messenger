@@ -65,4 +65,27 @@ public class RoomService {
         return roomRepository.save(room);
     }
 
+    public Room AddPendingList (User user, Room room) {
+        if (room.getWaiting() == null) {
+            room.setWaiting(new HashSet<>());
+        }
+        room.getMembers().add(user);
+        return roomRepository.save(room);
+    }
+
+    public Room AddFromWaitingList (User user, Room room) {
+        room.getWaiting().forEach(
+                u -> {
+                    if (u.getKey().equals(user.getKey())) {
+                        room.getWaiting().remove(u);
+                        if (room.getMembers().size() >= room.getMax_member()) {
+                            return;
+                        }
+                        room.getMembers().add(u);
+                    }
+                }
+        );
+        return roomRepository.save(room);
+    }
+
 }

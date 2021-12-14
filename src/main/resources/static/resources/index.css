@@ -141,3 +141,20 @@ p, button, input, select, textarea, span, tr, td {
 li {
     display: flex;
 }
+
+.pendinglist {
+    color: #fff;
+    display:none;
+    left: 15%;
+    top: 25%;
+    background-repeat: no-repeat;
+    background-image: url(https://images.unsplash.com/photo-1637825891028-564f672aa42c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80);
+    position: fixed;
+    z-index : 1000;
+    width: 70%;
+    height: 40%;
+    border-radius: 18px;
+    padding-top: 80px;
+    text-align:center;
+    border: 1px solid #8441ab;
+}

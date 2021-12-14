@@ -12,7 +12,7 @@ import java.io.Serializable;
 public class ChatMessage implements Serializable {
 
     public enum MessageType {
-        CHAT, CONNECT, LEAVE, LOCK, UNLOCK, APPROVED, APPROVE, PENDDING, CURMEM
+        CHAT, CONNECT, LEAVE, LOCK, UNLOCK, APPROVED, APPROVE, PENDDING, CURMEM, NEEDPERM, NOTAPV;
     }
 
     private String author;

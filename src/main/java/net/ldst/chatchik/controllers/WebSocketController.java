@@ -37,6 +37,9 @@ public class WebSocketController {
     @Autowired
     private RoomService roomService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @MessageMapping("/test")
     public void test(SimpMessageHeaderAccessor accessor) {
         log.info(accessor.getUser().getName() + " connected");
@@ -82,6 +85,7 @@ public class WebSocketController {
             u.getOwnroom().setRoomid("not correct roomid");
         }
 
+        // when user id owner
         if (u.getOwnroom().getRoomid().equals(msg.getRoomid())) {
             msg.setType(ChatMessage.MessageType.APPROVED);
             r.getMembers().forEach(
@@ -91,6 +95,8 @@ public class WebSocketController {
             );
             return;
         }
+
+        // when room is max
         if (r.getMembers().size() >= r.getMax_member()) {
             msg.setType(ChatMessage.MessageType.LEAVE);
             r.getMembers().forEach(
@@ -100,16 +106,32 @@ public class WebSocketController {
             );
             return;
         }
+
+        // when room is locked
         if (r.getIs_locked()) {
             msg.setType(ChatMessage.MessageType.PENDDING);
             operator.convertAndSendToUser(u.getKey(), "/msg/" + roomid, msg);
+            String ownerkey = r.getOwner().getKey();
             r.getMembers().forEach(
                     user -> {
+                        if (user.getKey().equals(u.getKey()) || user.getKey().equals(ownerkey)) {
+                            return;
+                        }
                         operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
                     }
             );
+
+            // user key in content
+            msg.setType(ChatMessage.MessageType.NEEDPERM);
+            msg.setAuthor(u.getUsername());
+            msg.setContent(u.getKey());
+            r = roomService.AddPendingList(u, r);
+            operator.convertAndSendToUser(r.getOwner().getKey(), "/msg/" + roomid, msg);
+
             return;
         }
+
+        // when everythings fine
         roomService.AddMember(u, r);
         msg.setType(ChatMessage.MessageType.APPROVED);
         r.getMembers().forEach(
@@ -128,6 +150,8 @@ public class WebSocketController {
             u.setOwnroom(new Room());
             u.getOwnroom().setRoomid("not correct roomid");
         }
+
+        // leave
         msg.setUserid(DigestUtils.md5DigestAsHex(u.getKey().getBytes(StandardCharsets.UTF_8)));
         if (msg.getType().equals(ChatMessage.MessageType.LEAVE)) {
             r = roomService.RemoveUser(u, r);
@@ -143,6 +167,7 @@ public class WebSocketController {
             return;
         }
 
+        // lock
         if (msg.getType().equals(ChatMessage.MessageType.LOCK)) {
             if (u.getOwnroom().getRoomid().equals(r.getRoomid())) {
                 r.setIs_locked(true);
@@ -157,6 +182,7 @@ public class WebSocketController {
             return;
         }
 
+        // unlock
         if (msg.getType().equals(ChatMessage.MessageType.UNLOCK)) {
             if (u.getOwnroom().getRoomid().equals(r.getRoomid())) {
                 r.setIs_locked(false);
@@ -171,6 +197,7 @@ public class WebSocketController {
             return;
         }
 
+        // current member
         if (msg.getType().equals(ChatMessage.MessageType.CURMEM)) {
             r.getMembers().forEach(
                     user -> {
@@ -178,6 +205,41 @@ public class WebSocketController {
                         operator.convertAndSendToUser(u.getKey(), "/msg/" + roomid, msg);
                     }
             );
+            return;
+        }
+
+        // approve user to room
+        if (msg.getType().equals(ChatMessage.MessageType.APPROVE)) {
+            if (r.getOwner().getKey().equals(u.getKey())) {
+                User user = userRepository.findByUserName(msg.getContent()).get();
+                if (r.getMembers().size() >= r.getMax_member()) {
+                    return;
+                }
+                r = roomService.AddFromWaitingList(user, r);
+                msg.setType(ChatMessage.MessageType.APPROVED);
+                r.getMembers().forEach(
+                        userr -> {
+                            operator.convertAndSendToUser(userr.getKey(), "/msg/" + roomid, msg);
+                        }
+                );
+            }
+        }
+
+        // todo
+        if (msg.getType().equals(ChatMessage.MessageType.NOTAPV)) {
+            if (r.getOwner().getKey().equals(u.getKey())) {
+                Room finalR = r;
+                r.getWaiting().forEach(
+                        uuser -> {
+                            if (uuser.getKey().equals(msg.getContent())) {
+                                finalR.getWaiting().remove(uuser);
+                            }
+                        }
+                );
+                roomRepository.save(finalR);
+                msg.setType(ChatMessage.MessageType.NOTAPV);
+                operator.convertAndSendToUser(msg.getContent(), "/msg/" + roomid, msg);
+            }
         }
 
     }

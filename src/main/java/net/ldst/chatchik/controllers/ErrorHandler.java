@@ -11,7 +11,7 @@ public class ErrorHandler {
     @ExceptionHandler(ExceedMemberException.class)
     @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
     public String exceedMember (Exception e) {
-        return "redirect:/error/exceedmember";
+        return "redirect:/error/" + e.getMessage();
     }
 
 }

@@ -40,4 +40,7 @@ public class Room {
     @ToString.Exclude
     private Set<User> members;
 
+    @OneToMany(mappedBy = "waiting", orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<User> waiting;
+
 }

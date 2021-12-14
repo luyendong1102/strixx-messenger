@@ -17,10 +17,10 @@ function connect() {
     stompClient.connect({}, onConnected, onError);
 }
 
-console.log(hashKey);
 connect();
 
 function onConnected() {
+    stompClient.debug = null;
     stompClient.subscribe('/personal/msg/' + rroomid, onMessageReceived);
     connectingElement.textContent = 'connected';
     connectingElement.style.color = 'green'
@@ -29,7 +29,7 @@ function onConnected() {
         content: null,
         roomid: rroomid,
         type: 'CONNECT',
-        userid: ''
+        userid: userid
     };
     stompClient.send("/app/send.entrypoint", {}, JSON.stringify(message));
 }
@@ -108,13 +108,18 @@ function sendMessage(event) {
         if (messageContent.value === '/HELP') {
             messageContent.value = '';
             context.style.color = '#419CF2';
-            context.textContent =
-                "/INVITE : Generate an invitelink \n" +
-                "/LEAVE : Leave conversation \n" +
-                "/APPROVE : Permit join request \n" +
-                "/LOCK : Lock room only admin \n" +
-                "/UNLOCK : Lock room only admin";
-            devision.appendChild(context);
+            var context1 = document.createElement('p');
+            var context2 = document.createElement('p');
+            var context3 = document.createElement('p');
+            var context4 = document.createElement('p');
+            context1.textContent = "/INVITE : Generate an invitelink";
+            context2.textContent = "/LEAVE : Leave conversation";
+            context3.textContent = "/LOCK : Lock room only admin";
+            context4.textContent = "/UNLOCK : Unock room only admin";
+            devision.appendChild(context1);
+            devision.appendChild(context2);
+            devision.appendChild(context3);
+            devision.appendChild(context4);
             li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
             li.appendChild(devision);
             messageArea.appendChild(li);
@@ -186,6 +191,12 @@ function onMessageReceived(payload) {
         return;
     }
 
+    if (message.type === 'NOTAPV') {
+        socket.close();
+        window.location.replace("/")
+        return;
+    }
+
     if (message.type === 'PENDDING') {
         uuid.textContent = message.author;
         uuid.style.color = '#419CF2';
@@ -199,6 +210,30 @@ function onMessageReceived(payload) {
         messageArea.appendChild(li);
         messageArea.scrollTop = messageArea.scrollHeight;
         return;
+    }
+
+    if (message.type === 'NEEDPERM') {
+        var popup = document.getElementById("ppelist");
+        var ccontexxt = document.getElementById("juser");
+        ccontexxt.textContent = message.author + ' want to join ?';
+        popup.style.display = 'block';
+        var apv = document.getElementById("apv");
+        var notapv = document.getElementById("notapv");
+        apv.onclick = function (event) {
+            message.type = 'APPROVE';
+            stompClient.send("/app/send.command", {}, JSON.stringify(message));
+            popup.style.display = 'none';
+            event.preventDefault();
+            return;
+        }
+
+        notapv.onclick = function (event) {
+            message.type = 'NOTAPV';
+            stompClient.send("/app/send.command", {}, JSON.stringify(message));
+            popup.style.display = 'none';
+            event.preventDefault();
+            return;
+        }
     }
 
     if (message.type === 'LOCK') {

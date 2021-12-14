@@ -34,4 +34,8 @@ public class User {
     @ToString.Exclude
     private Set<Room> rooms;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "roomwaitingid")
+    private Room waiting;
+
 }
