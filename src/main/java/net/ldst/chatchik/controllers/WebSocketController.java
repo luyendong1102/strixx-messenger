@@ -55,7 +55,9 @@ public class WebSocketController {
     @MessageMapping("/send.chat")
     public void testsend(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) {
         String roomid = msg.getRoomid();
-        String userid = accessor.getUser().getName();
+        String userr = accessor.getUser().getName();
+        User u = userRepository.findByUserName(userr).get();
+        String userid = u.getKey();
         Room room = roomRepository.findByRoomId(roomid).get();
 
 //        log.info("current " + userid);
@@ -93,7 +95,8 @@ public class WebSocketController {
     @MessageMapping("/send.entrypoint")
     public void testAddM(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) throws ExceedMemberException {
         String roomid = msg.getRoomid();
-        User u = (User) accessor.getSessionAttributes().get("userinfor");
+        User uu = (User) accessor.getSessionAttributes().get("userinfor");
+        User u = userRepository.findByUserName(uu.getKey()).get();
         Optional<Room> rr = roomRepository.findByRoomId(roomid);
 
         if (rr.isEmpty()) {
@@ -164,7 +167,8 @@ public class WebSocketController {
     @MessageMapping("/send.command")
     public void testCmd(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) throws ExceedMemberException {
         String roomid = msg.getRoomid();
-        User u = (User) accessor.getSessionAttributes().get("userinfor");
+        User uu = (User) accessor.getSessionAttributes().get("userinfor");
+        User u = userRepository.findByUserName(uu.getKey()).get();
         Room r = roomRepository.findByRoomId(roomid).get();
         if (u.getOwnroom() == null) {
             u.setOwnroom(new Room());

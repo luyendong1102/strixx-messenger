@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,36 +55,56 @@ public class RoomService {
     }
 
     public Room RemoveUser (User user, Room room) throws ExceedMemberException {
-
         room.getMembers().removeIf(u -> u.getKey().equals(user.getKey()));
         return roomRepository.save(room);
     }
 
-    public Room AddPendingList (User user, Room r) {
+    public Room AddPendingList (User user, Room room) {
+        Room r = roomRepository.findByRoomId(room.getRoomid()).get();
         User u = userRepository.findByUserName(user.getKey()).get();
         if (r.getWaiting() == null) {
             r.setWaiting(new HashSet<>());
+        }
+        if (r.getWaiting().stream().anyMatch(
+                uur -> {
+                    return uur.getKey().equals(u.getKey());
+                }
+        )) {
+            return room;
         }
         u.setWaiting(r);
         r.getWaiting().add(u);
         return roomRepository.save(r);
     }
 
-    public Room AddFromWaitingList (User user, Room room) {
+    public Room AddFromWaitingList (User uuser, Room r) throws ExceedMemberException {
+        Room room = roomRepository.findByRoomId(r.getRoomid()).get();
+        User user = userRepository.findByUserName(uuser.getKey()).get();
         if (room.getWaiting() == null) {
             room.setWaiting(new HashSet<>());
         }
-        room.getWaiting().forEach(
-                u -> {
-                    if (u.getKey().equals(user.getKey())) {
-                        room.getWaiting().remove(u);
-                        if (room.getMembers().size() >= room.getMax_member()) {
-                            return;
-                        }
-                        room.getMembers().add(u);
-                    }
-                }
-        );
+        log.info(room.getWaiting().size()+ " size");
+        if (room.getWaiting() == null) {
+            return AddMember(user, room);
+        }
+
+        room.getWaiting().removeIf(uindex -> uindex.getKey().equals(user.getKey()));
+        if (room.getMembers().size() >= room.getMax_member()) {
+            return room;
+        }
+        room.getMembers().add(user);
+
+//        room.getWaiting().forEach(
+//                u -> {
+//                    if (u.getKey().equals(user.getKey())) {
+//                        room.getWaiting().remove(u);
+//                        if (room.getMembers().size() >= room.getMax_member()) {
+//                            return;
+//                        }
+//                        room.getMembers().add(u);
+//                    }
+//                }
+//        );
         return roomRepository.save(room);
     }
 

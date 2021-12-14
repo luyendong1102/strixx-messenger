@@ -9,7 +9,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 public class User {
 
