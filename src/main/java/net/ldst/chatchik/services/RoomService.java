@@ -24,7 +24,8 @@ public class RoomService {
     @Autowired
     private UserRepository userRepository;
 
-    public Room createRoom (User owner, Room room) {
+    public Room createRoom (User oowner, Room room) {
+        User owner = userRepository.findByUserName(oowner.getKey()).get();
         room.setRoomid(UUID.randomUUID().toString());
         room.setOwner(owner);
         room.setMembers(new HashSet<>());
@@ -41,7 +42,9 @@ public class RoomService {
         return roomRepository.findByRoomId(idd);
     }
 
-    public Room AddMember (User user, Room room) throws ExceedMemberException {
+    public Room AddMember (User uuser, Room rroom) throws ExceedMemberException {
+        User user = userRepository.findByUserName(uuser.getKey()).get();
+        Room room = roomRepository.findByRoomId(rroom.getRoomid()).get();
         if (room.getMembers().size() == room.getMax_member()) {
             throw new ExceedMemberException();
         }
@@ -54,7 +57,9 @@ public class RoomService {
         return roomRepository.save(room);
     }
 
-    public Room RemoveUser (User user, Room room) throws ExceedMemberException {
+    public Room RemoveUser (User uuser, Room rroom) throws ExceedMemberException {
+        User user = userRepository.findByUserName(uuser.getKey()).get();
+        Room room = roomRepository.findByRoomId(rroom.getRoomid()).get();
         room.getMembers().removeIf(u -> u.getKey().equals(user.getKey()));
         return roomRepository.save(room);
     }

@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.swing.text.html.Option;
+import java.util.Optional;
 
 @Controller
 @Slf4j
@@ -115,6 +117,10 @@ public class PageController {
     // todo in service
     @GetMapping("/invite/{roomid}")
     public String prePareChat (HttpServletRequest request, @PathVariable String roomid, Model model) {
+        Optional<Room> room = roomRepository.findByRoomId(roomid);
+        if (room.isEmpty()) {
+            return "redirect:/";
+        }
         User u = (User) request.getSession().getAttribute("userinfor");
         if (u == null) {
             log.info("new user");
@@ -126,6 +132,10 @@ public class PageController {
     // todo in service
     @PostMapping("/invite")
     public String JJoinChat (HttpServletRequest request, @RequestParam String key, Model model) {
+        Optional<Room> room = roomRepository.findByRoomId(key);
+        if (room.isEmpty()) {
+            return "redirect:/greeting";
+        }
         return "redirect:/chat/" + key;
     }
 

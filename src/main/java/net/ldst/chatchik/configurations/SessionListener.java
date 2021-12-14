@@ -34,7 +34,6 @@ public class SessionListener implements HttpSessionListener {
     @Override
     public void sessionDestroyed(HttpSessionEvent se) {
         User u = (User) se.getSession().getAttribute("userinfor");
-        log.info(u.getKey());
         if (u == null) {
             HttpSessionListener.super.sessionDestroyed(se);
         }
