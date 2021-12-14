@@ -55,22 +55,18 @@ public class RoomService {
 
     public Room RemoveUser (User user, Room room) throws ExceedMemberException {
 
-        room.getMembers().forEach(
-                u -> {
-                    if (u.getKey().equals(user.getKey())) {
-                        room.getMembers().remove(u);
-                    }
-                }
-        );
+        room.getMembers().removeIf(u -> u.getKey().equals(user.getKey()));
         return roomRepository.save(room);
     }
 
-    public Room AddPendingList (User user, Room room) {
-        if (room.getWaiting() == null) {
-            room.setWaiting(new HashSet<>());
+    public Room AddPendingList (User user, Room r) {
+        User u = userRepository.findByUserName(user.getKey()).get();
+        if (r.getWaiting() == null) {
+            r.setWaiting(new HashSet<>());
         }
-        room.getMembers().add(user);
-        return roomRepository.save(room);
+        u.setWaiting(r);
+        r.getWaiting().add(u);
+        return roomRepository.save(r);
     }
 
     public Room AddFromWaitingList (User user, Room room) {

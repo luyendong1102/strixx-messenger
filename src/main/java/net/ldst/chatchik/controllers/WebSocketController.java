@@ -1,5 +1,6 @@
 package net.ldst.chatchik.controllers;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.ldst.chatchik.entities.ChatMessage;
 import net.ldst.chatchik.entities.Room;
@@ -49,17 +50,30 @@ public class WebSocketController {
 
     // production here
 
+    @SneakyThrows
     @MessageMapping("/send.chat")
     public void testsend(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) {
         String roomid = msg.getRoomid();
         String userid = accessor.getUser().getName();
         Room room = roomRepository.findByRoomId(roomid).get();
 
+//        log.info("current " + userid);
+//        if (room.getMembers().stream().noneMatch(
+//                u -> {
+//                    log.info(u.getKey());
+//                    return u.getKey().equals(userid);
+//                }
+//        )) {
+//            log.info("not current user ");
+//            return;
+//        }
+
         if (room.getMembers().stream().noneMatch(
-                u -> {
-                    return u.getKey().equals(userid);
+                uus -> {
+                    return uus.getKey().equals(userid);
                 }
         )) {
+            log.info("wrong address ");
             return;
         }
 
