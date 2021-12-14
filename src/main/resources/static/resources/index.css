@@ -158,3 +158,11 @@ li {
     text-align:center;
     border: 1px solid #8441ab;
 }
+
+#apv {
+    margin-right: 15px;
+}
+
+#notapv {
+    margin-left: 15px;
+}

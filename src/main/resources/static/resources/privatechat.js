@@ -20,7 +20,6 @@ function connect() {
 connect();
 
 function onConnected() {
-    stompClient.debug = null;
     stompClient.subscribe('/personal/msg/' + rroomid, onMessageReceived);
     connectingElement.textContent = 'connected';
     connectingElement.style.color = 'green'
@@ -112,14 +111,20 @@ function sendMessage(event) {
             var context2 = document.createElement('p');
             var context3 = document.createElement('p');
             var context4 = document.createElement('p');
-            context1.textContent = "/INVITE : Generate an invitelink";
+            var context5 = document.createElement('p');
+            var context6 = document.createElement('p');
+            context1.innerHTML = "/INVITE : Generate an invitelink";
             context2.textContent = "/LEAVE : Leave conversation";
             context3.textContent = "/LOCK : Lock room only admin";
-            context4.textContent = "/UNLOCK : Unock room only admin";
+            context4.textContent = "/UNLOCK : Unlock room only admin";
+            context5.textContent = "/CURMEM : Get current member";
+            context6.textContent = "/KICK : Kickmember";
             devision.appendChild(context1);
             devision.appendChild(context2);
             devision.appendChild(context3);
             devision.appendChild(context4);
+            devision.appendChild(context5);
+            devision.appendChild(context1);
             li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
             li.appendChild(devision);
             messageArea.appendChild(li);
@@ -213,12 +218,28 @@ function onMessageReceived(payload) {
     }
 
     if (message.type === 'NEEDPERM') {
-        var popup = document.getElementById("ppelist");
-        var ccontexxt = document.getElementById("juser");
-        ccontexxt.textContent = message.author + ' want to join ?';
+        var popup = document.createElement('div');
+        popup.className = "pendinglist";
+        popup.id = "ppelist"
+        var ccontexxt = document.createElement('p');
+        ccontexxt.innerHTML = message.author + ' want to join ?';
+        var apv = document.createElement('button');
+        var notapv = document.createElement('button');
+        apv.className = 'btn btn-primary';
+        notapv.className = 'btn btn-danger';
+
+        apv.innerHTML = 'APRROVE';
+        notapv.innerHTML = 'NO';
+
+        apv.id = 'apv';
+        notapv.id = 'notapv'
+
+        popup.appendChild(ccontexxt);
+        popup.appendChild(apv);
+        popup.appendChild(notapv);
+
         popup.style.display = 'block';
-        var apv = document.getElementById("apv");
-        var notapv = document.getElementById("notapv");
+
         apv.onclick = function (event) {
             message.type = 'APPROVE';
             stompClient.send("/app/send.command", {}, JSON.stringify(message));
@@ -234,6 +255,10 @@ function onMessageReceived(payload) {
             event.preventDefault();
             return;
         }
+
+        var body = document.getElementById('boody');
+        body.appendChild(popup);
+
     }
 
     if (message.type === 'LOCK') {

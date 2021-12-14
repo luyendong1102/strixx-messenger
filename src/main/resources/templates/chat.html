@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
 </head>
 
-<body>
+<body id="boody">
     <div class="chatheader">
         <span style="color: #fff; font-family: Poppins, sans-serif; margin-left: 2vh;">Room: </span> <span
             style="color: #fff; font-family: Poppins, sans-serif; margin-left: 2vh;" th:text="${roomid}"
@@ -51,11 +51,11 @@
         </form>
     </div>
 
-    <div class="pendinglist" id="ppelist">
+    <!-- <div class="pendinglist" id="ppelist">
         <p style="color: #fff" id="juser"></p>
         <button type="button" class="btn btn-primary" id="apv">Appove</button>
         <button type="button" class="btn btn-danger" id="notapv">No</button>
-    </div>
+    </div> -->
 
     <script>
         var rroomid = "[[${roomid}]]";
