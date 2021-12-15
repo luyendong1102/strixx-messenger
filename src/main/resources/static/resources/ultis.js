@@ -10,8 +10,10 @@ function copyText() {
 }
 
 function resizeImg(currentIMG) {
+    console.log("imageview invoke");
     var img = document.getElementById("imagecontent");
     var container = document.getElementById("imageviewer");
     img.src = currentIMG.src;
+    img.alt = 'message image';
     container.style.display = 'block';
 }

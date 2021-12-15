@@ -365,7 +365,11 @@ function onMessageReceived(payload) {
         var img = document.createElement('img');
         img.setAttribute('class', 'message_img');
         img.src = decrypt(key, message.content);
-        img.setAttribute('onclick', 'resizeImg(this);');
+        img.alt = 'message image';
+        // img.setAttribute('onclick', 'resizeImg(this);');
+        img.onclick = function () {
+            resizeImg(img);
+        }
         if (message.userid !== hashKey) {
             li.style = 'list-style-type:none; margin-top:10px; display:block;';
             li.appendChild(uuuid);

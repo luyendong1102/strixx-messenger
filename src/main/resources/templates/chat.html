@@ -31,33 +31,32 @@
     <div class="footer">
         <form id="messageForm" name="messageForm" class="messageForm">
             <input type="text" id="message" autocomplete="off" placeholder=" type /HELP to show commands" style="
-            width: 60%;
-            border: 2px solid;
-            border-radius: 10px;
-            font-size: 2vh;
-            height: 6.5vh;
-            font-display: inline-block;
-          " onchange = "filterImg(this);"/>
+                        width: 60%;
+                        border: 2px solid;
+                        border-radius: 10px;
+                        font-size: 2vh;
+                        height: 6.5vh;
+                        font-display: inline-block;
+                      " onchange="filterImg(this);" />
             <div class="image_chooser">
                 <label for="img_form" id="select_img"
                     style="background: url(/resources/IMAGE.svg) no-repeat; height:6.5vh">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>
                 <input type="file" id="img_form" style="display: none;" onchange="imageChoose();" />
             </div>
             <button type="submit" style="
-          background-color:#8441ab; 
-          color: #fff; 
-          margin-top: 15px; 
-          border-radius: 10px; 
-          height: 6.5vh;
-          width: 15vh; 
-          font-family: Readex Pro, sans-serif; 
-          font-size: 2vh;
-          display: inline-block;
-        ">Send</button>
+                      background-color:#8441ab; 
+                      color: #fff; 
+                      margin-top: 15px; 
+                      border-radius: 10px; 
+                      height: 6.5vh;
+                      width: 15vh; 
+                      font-family: Readex Pro, sans-serif; 
+                      font-size: 2vh;
+                      display: inline-block;
+                    ">Send</button>
         </form>
     </div>
-
-    <div id="imageviewer" onclick="this.style.display='none'">
+    <div id="imageviewer" onclick="this.style.display='none';">
         <img id="imagecontent">
     </div>
 
