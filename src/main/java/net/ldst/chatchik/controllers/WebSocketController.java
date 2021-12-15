@@ -125,6 +125,18 @@ public class WebSocketController {
 
         // when room is locked
         if (r.getIs_locked()) {
+
+            if (r.getOwner().getKey().equals(u.getKey())) {
+                roomService.AddMember(u, r);
+                msg.setType(ChatMessage.MessageType.APPROVED);
+                r.getMembers().forEach(
+                        user -> {
+                            operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
+                        }
+                );
+                return;
+            }
+
             msg.setType(ChatMessage.MessageType.PENDDING);
             operator.convertAndSendToUser(u.getKey(), "/msg/" + roomid, msg);
             String ownerkey = r.getOwner().getKey();

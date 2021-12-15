@@ -11,6 +11,7 @@ key = key.replaceAll("-", "");
 key = key + global;
 key = key.substring(0, 32);
 var hashKey = CryptoJS.MD5(userid).toString();
+var fileInput = document.getElementById('img_form');
 
 function connect() {
     stompClient = Stomp.over(socket);
@@ -39,18 +40,56 @@ function onError(error) {
     connectingElement.style.color = 'red';
 }
 
+var message = {
+    author: username,
+    content: null,
+    roomid: rroomid,
+    type: null,
+    userid: ''
+};
+
+
+// image message
+function imageChoose() {
+    var file = document.querySelector('input[type=file]')['files'][0];
+    var reader = new FileReader();
+    console.log("next");
+    reader.onload = function () {
+        var encrypMessage = encrypt(key, reader.result);
+        message.type = 'IMAGE';
+        message.content = encrypMessage;
+    }
+    reader.readAsDataURL(file);
+    messageContent.value = 'IMG: ' + fileInput.value;
+}
+
+// fileInput.addEventListener("onchange", (event) => {
+//     imageChoose();
+//     event.preventDefault();
+// })
+
+// fileInput.setAttribute('change', 'imageChoose();');
+
+// messageContent.addEventListener("change", (event) => {
+//     var regex = /^ IMG:.* $/;
+//     if (!regex.test(messageContent.value)) {
+//         console.log("going to send valina message");
+//         message.type = 'CHAT';
+//     }
+// })
+
+function filterImg(element) {
+    var regex = /^ IMG:.* $/;
+    if (!regex.test(element.value)) {
+        console.log("going to send valina message");
+        message.type = 'CHAT';
+    }
+}
 
 function sendMessage(event) {
 
     // command section
     if (stompClient) {
-        var message = {
-            author: username,
-            content: null,
-            roomid: rroomid,
-            type: null,
-            userid: ''
-        };
 
         var uuid = document.createElement('span');
         var context = document.createElement('p');
@@ -133,8 +172,15 @@ function sendMessage(event) {
             return;
         }
 
+        // TODO image message
+        if (message.type === 'IMAGE') {
+            stompClient.send("/app/send.chat", {}, JSON.stringify(message));
+            messageContent.value = '';
+            event.preventDefault();
+            return;
+        }
+
         var encrypMessage = encrypt(key, messageContent.value);
-        console.log(encrypMessage)
         message.content = encrypMessage;
         message.type = 'CHAT';
         stompClient.send("/app/send.chat", {}, JSON.stringify(message));
@@ -312,10 +358,35 @@ function onMessageReceived(payload) {
         return;
     }
 
+    if (message.type === 'IMAGE') {
+        var uuuid = document.createElement('p');
+        uuuid.textContent = message.author + ': ';
+        uuuid.style.color = '#B4EF57';
+        var img = document.createElement('img');
+        img.setAttribute('class', 'message_img');
+        img.src = decrypt(key, message.content);
+        img.setAttribute('onclick', 'resizeImg(this);');
+        if (message.userid !== hashKey) {
+            li.style = 'list-style-type:none; margin-top:10px; display:block;';
+            li.appendChild(uuuid);
+            li.appendChild(img);
+            messageArea.appendChild(li);
+            messageArea.scrollTop = messageArea.scrollHeight;
+            event.preventDefault();
+            return;
+        }
+        var lli = document.createElement('li');
+        lli.style = 'list-style-type:none; margin-top:10px; margin-right : 5%; justify-content: flex-end;';
+        lli.appendChild(img);
+        messageArea.appendChild(lli);
+        messageArea.scrollTop = messageArea.scrollHeight;
+        event.preventDefault();
+        return;
+    }
 
-    context.textContent = decrypt(key, message.content);
     devision.setAttribute('id', 'mmessage');
     devision.appendChild(uuid);
+    context.textContent = decrypt(key, message.content);
     devision.appendChild(context);
 
     if (message.userid !== hashKey) {

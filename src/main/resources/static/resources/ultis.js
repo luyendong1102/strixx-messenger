@@ -8,3 +8,10 @@ function copyText() {
     window.getSelection().removeAllRanges();
     alert("Copied: " + rooid.innerText);
 }
+
+function resizeImg(currentIMG) {
+    var img = document.getElementById("imagecontent");
+    var container = document.getElementById("imageviewer");
+    img.src = currentIMG.src;
+    container.style.display = 'block';
+}
