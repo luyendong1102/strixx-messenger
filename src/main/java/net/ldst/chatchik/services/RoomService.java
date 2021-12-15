@@ -3,14 +3,13 @@ package net.ldst.chatchik.services;
 import lombok.extern.slf4j.Slf4j;
 import net.ldst.chatchik.entities.Room;
 import net.ldst.chatchik.entities.User;
-import net.ldst.chatchik.exceptions.ExceedMemberException;
+import net.ldst.chatchik.exceptions.GeneralException;
 import net.ldst.chatchik.repositories.RoomRepository;
 import net.ldst.chatchik.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,8 +23,12 @@ public class RoomService {
     @Autowired
     private UserRepository userRepository;
 
-    public Room createRoom (User oowner, Room room) {
-        User owner = userRepository.findByUserName(oowner.getKey()).get();
+    public Room createRoom (User oowner, Room room) throws GeneralException {
+        Optional<User> resultUser = userRepository.findByUserName(oowner.getKey());
+        if (resultUser.isEmpty()) {
+            throw new GeneralException("Owner User not found");
+        }
+        User owner = resultUser.get();
         room.setRoomid(UUID.randomUUID().toString());
         room.setOwner(owner);
         room.setMembers(new HashSet<>());
@@ -42,11 +45,21 @@ public class RoomService {
         return roomRepository.findByRoomId(idd);
     }
 
-    public Room AddMember (User uuser, Room rroom) throws ExceedMemberException {
-        User user = userRepository.findByUserName(uuser.getKey()).get();
-        Room room = roomRepository.findByRoomId(rroom.getRoomid()).get();
+    public Room AddMember (User uuser, Room rroom) throws GeneralException {
+        Optional<User> resultUser = userRepository.findByUserName(uuser.getKey());
+        Optional<Room> resultRoom = roomRepository.findByRoomId(rroom.getRoomid());
+        if (resultRoom.isEmpty()) {
+            throw new GeneralException("Room not found");
+        }
+        if (resultUser.isEmpty()) {
+            throw new GeneralException("User not found");
+        }
+
+        Room room = resultRoom.get();
+        User user = resultUser.get();
+
         if (room.getMembers().size() == room.getMax_member()) {
-            throw new ExceedMemberException();
+            throw new GeneralException("Room is max");
         }
         if (user.getRooms() == null) {
             user.setRooms(new HashSet<>());
@@ -57,16 +70,37 @@ public class RoomService {
         return roomRepository.save(room);
     }
 
-    public Room RemoveUser (User uuser, Room rroom) throws ExceedMemberException {
-        User user = userRepository.findByUserName(uuser.getKey()).get();
-        Room room = roomRepository.findByRoomId(rroom.getRoomid()).get();
+    public Room RemoveUser (User uuser, Room rroom) throws GeneralException {
+        Optional<User> resultUser = userRepository.findByUserName(uuser.getKey());
+        Optional<Room> resultRoom = roomRepository.findByRoomId(rroom.getRoomid());
+        if (resultRoom.isEmpty()) {
+            throw new GeneralException("Room not found");
+        }
+        if (resultUser.isEmpty()) {
+            throw new GeneralException("User not found");
+        }
+
+        Room room = resultRoom.get();
+        User user = resultUser.get();
+
         room.getMembers().removeIf(u -> u.getKey().equals(user.getKey()));
+
         return roomRepository.save(room);
     }
 
-    public Room AddPendingList (User user, Room room) {
-        Room r = roomRepository.findByRoomId(room.getRoomid()).get();
-        User u = userRepository.findByUserName(user.getKey()).get();
+    public Room AddPendingList (User user, Room room) throws GeneralException {
+        Optional<User> resultUser = userRepository.findByUserName(user.getKey());
+        Optional<Room> resultRoom = roomRepository.findByRoomId(room.getRoomid());
+        if (resultRoom.isEmpty()) {
+            throw new GeneralException("Room not found");
+        }
+        if (resultUser.isEmpty()) {
+            throw new GeneralException("User not found");
+        }
+
+        Room r = resultRoom.get();
+        User u = resultUser.get();
+
         if (r.getWaiting() == null) {
             r.setWaiting(new HashSet<>());
         }
@@ -82,13 +116,22 @@ public class RoomService {
         return roomRepository.save(r);
     }
 
-    public Room AddFromWaitingList (User uuser, Room r) throws ExceedMemberException {
-        Room room = roomRepository.findByRoomId(r.getRoomid()).get();
-        User user = userRepository.findByUserName(uuser.getKey()).get();
+    public Room AddFromWaitingList (User uuser, Room r) throws GeneralException {
+        Optional<User> resultUser = userRepository.findByUserName(uuser.getKey());
+        Optional<Room> resultRoom = roomRepository.findByRoomId(r.getRoomid());
+        if (resultRoom.isEmpty()) {
+            throw new GeneralException("Room not found");
+        }
+        if (resultUser.isEmpty()) {
+            throw new GeneralException("User not found");
+        }
+
+        Room room = resultRoom.get();
+        User user = resultUser.get();
+
         if (room.getWaiting() == null) {
             room.setWaiting(new HashSet<>());
         }
-        log.info(room.getWaiting().size()+ " size");
         if (room.getWaiting() == null) {
             return AddMember(user, room);
         }
@@ -98,18 +141,6 @@ public class RoomService {
             return room;
         }
         room.getMembers().add(user);
-
-//        room.getWaiting().forEach(
-//                u -> {
-//                    if (u.getKey().equals(user.getKey())) {
-//                        room.getWaiting().remove(u);
-//                        if (room.getMembers().size() >= room.getMax_member()) {
-//                            return;
-//                        }
-//                        room.getMembers().add(u);
-//                    }
-//                }
-//        );
         return roomRepository.save(room);
     }
 

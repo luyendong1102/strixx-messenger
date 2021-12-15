@@ -22,8 +22,8 @@ public class HandShakeHandler extends HttpSessionHandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         if (request instanceof ServletServerHttpRequest servletRequest) {
             HttpSession session = servletRequest.getServletRequest().getSession();
-            User user = (User) session.getAttribute("userinfor");
-            attributes.put("userinfor", user);
+            User user = (User) session.getAttribute("userinfo");
+            attributes.put("userinfo", user);
         }
         return true;
     }

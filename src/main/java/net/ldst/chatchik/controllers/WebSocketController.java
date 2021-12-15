@@ -5,13 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import net.ldst.chatchik.entities.ChatMessage;
 import net.ldst.chatchik.entities.Room;
 import net.ldst.chatchik.entities.User;
-import net.ldst.chatchik.exceptions.ExceedMemberException;
+import net.ldst.chatchik.exceptions.GeneralException;
 import net.ldst.chatchik.repositories.RoomRepository;
 import net.ldst.chatchik.repositories.UserRepository;
 import net.ldst.chatchik.services.EncrypMessageService;
 import net.ldst.chatchik.services.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -20,9 +19,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.security.Principal;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 @Controller
 @Slf4j
@@ -53,33 +51,23 @@ public class WebSocketController {
 
     @SneakyThrows
     @MessageMapping("/send.chat")
-    public void testsend(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) {
+    public void chathandler(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) {
         String roomid = msg.getRoomid();
-        String userr = accessor.getUser().getName();
-        User u = userRepository.findByUserName(userr).get();
+        User u = (User) Objects.requireNonNull(accessor.getSessionAttributes()).get("userinfo");
         String userid = u.getKey();
         Room room = roomRepository.findByRoomId(roomid).get();
 
-//        log.info("current " + userid);
-//        if (room.getMembers().stream().noneMatch(
-//                u -> {
-//                    log.info(u.getKey());
-//                    return u.getKey().equals(userid);
-//                }
-//        )) {
-//            log.info("not current user ");
-//            return;
-//        }
-
+        // if user is not in room, send no message
         if (room.getMembers().stream().noneMatch(
                 uus -> {
                     return uus.getKey().equals(userid);
                 }
         )) {
-            log.info("wrong address ");
+            log.info("User is not in room ");
             return;
         }
 
+        // encrypt data;
         String context = encrypMessageService.CBCDecrypter(userid, msg.getContent());
         msg.setUserid(DigestUtils.md5DigestAsHex(userid.getBytes(StandardCharsets.UTF_8)));
         room.getMembers().forEach(
@@ -92,20 +80,25 @@ public class WebSocketController {
         );
     }
 
+    // when user fisrt connect to web socket
     @MessageMapping("/send.entrypoint")
-    public void testAddM(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) throws ExceedMemberException {
+    public void entrypoint(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) throws GeneralException {
         String roomid = msg.getRoomid();
-        User uu = (User) accessor.getSessionAttributes().get("userinfor");
-        User u = userRepository.findByUserName(uu.getKey()).get();
-        Optional<Room> rr = roomRepository.findByRoomId(roomid);
+        User u = (User) accessor.getSessionAttributes().get("userinfo");
+        Optional<Room> resultRoom = roomRepository.findByRoomId(roomid);
 
-        if (rr.isEmpty()) {
-            throw new ExceedMemberException();
+        if (resultRoom.isEmpty()) {
+            throw new GeneralException("Room not found");
         }
 
-        Room r = rr.get();
+        if (u == null) {
+            throw new GeneralException("User not found");
+        }
 
-        log.info("userkey " + u.getKey());
+        Room r = resultRoom.get();
+        log.info("User ID: " + u.getKey() + " connected WebSocket");
+
+        // hash user id
         msg.setUserid(DigestUtils.md5DigestAsHex(u.getKey().getBytes(StandardCharsets.UTF_8)));
         if (u.getOwnroom() == null) {
             u.setOwnroom(new Room());
@@ -144,7 +137,7 @@ public class WebSocketController {
                     }
             );
 
-            // user key in content
+            // send join request to room admin
             msg.setType(ChatMessage.MessageType.NEEDPERM);
             msg.setAuthor(u.getUsername());
             msg.setContent(u.getKey());
@@ -154,7 +147,7 @@ public class WebSocketController {
             return;
         }
 
-        // when everythings fine
+        // when there is no interceptor
         roomService.AddMember(u, r);
         msg.setType(ChatMessage.MessageType.APPROVED);
         r.getMembers().forEach(
@@ -164,31 +157,47 @@ public class WebSocketController {
         );
     }
 
+    // message command (special command)
     @MessageMapping("/send.command")
-    public void testCmd(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) throws ExceedMemberException {
+    public void handlecommands(@Payload ChatMessage msg, SimpMessageHeaderAccessor accessor) throws GeneralException {
         String roomid = msg.getRoomid();
-        User uu = (User) accessor.getSessionAttributes().get("userinfor");
-        User u = userRepository.findByUserName(uu.getKey()).get();
-        Room r = roomRepository.findByRoomId(roomid).get();
+        User u = (User) accessor.getSessionAttributes().get("userinfo");
+        Optional<Room> resultRoom = roomRepository.findByRoomId(roomid);
+
+        if (resultRoom.isEmpty()) {
+            throw new GeneralException("Room not found");
+        }
+
+        if (u == null) {
+            throw new GeneralException("User not found");
+        }
+
+        Room r = resultRoom.get();
+
+        // set fake ownroom to avoid null error
         if (u.getOwnroom() == null) {
             u.setOwnroom(new Room());
             u.getOwnroom().setRoomid("not correct roomid");
         }
 
-        // leave
+        // hash userid
         msg.setUserid(DigestUtils.md5DigestAsHex(u.getKey().getBytes(StandardCharsets.UTF_8)));
+
+        // leave command
         if (msg.getType().equals(ChatMessage.MessageType.LEAVE)) {
 
             r = roomService.RemoveUser(u, r);
 
             if (r.getMembers().size() == 0) {
                 roomRepository.delete(r);
+                log.info("Room: " + r.getRoomid() + " deleted");
                 return;
             }
 
+            // set new admin to next member, just like FIFO
             if (u.getKey().equals(r.getOwner().getKey())) {
                 r.setOwner(r.getMembers().iterator().next());
-                log.info(roomRepository.save(r).getOwner().getUsername());
+                roomRepository.save(r);
                 u.setOwnroom(null);
                 msg.setType(ChatMessage.MessageType.NEWLEAD);
                 operator.convertAndSendToUser(r.getMembers().iterator().next().getKey(), "/msg/" + roomid, msg);
@@ -200,10 +209,11 @@ public class WebSocketController {
                         operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
                     }
             );
+
             return;
         }
 
-        // lock
+        // lock command
         if (msg.getType().equals(ChatMessage.MessageType.LOCK)) {
             if (r.getOwner().getKey().equals(u.getKey())) {
                 r.setIs_locked(true);
@@ -218,7 +228,7 @@ public class WebSocketController {
             return;
         }
 
-        // unlock
+        // unlock command
         if (msg.getType().equals(ChatMessage.MessageType.UNLOCK)) {
             if (u.getOwnroom().getRoomid().equals(r.getRoomid())) {
                 r.setIs_locked(false);
@@ -261,18 +271,13 @@ public class WebSocketController {
             }
         }
 
-        // todo
+        // not approve user
         if (msg.getType().equals(ChatMessage.MessageType.NOTAPV)) {
             if (r.getOwner().getKey().equals(u.getKey())) {
-                Room finalR = r;
-                r.getWaiting().forEach(
-                        uuser -> {
-                            if (uuser.getKey().equals(msg.getContent())) {
-                                finalR.getWaiting().remove(uuser);
-                            }
-                        }
-                );
-                roomRepository.save(finalR);
+
+                r.getWaiting().removeIf( uindex -> uindex.getKey().equals(msg.getContent()));
+
+                roomRepository.save(r);
                 msg.setType(ChatMessage.MessageType.NOTAPV);
                 operator.convertAndSendToUser(msg.getContent(), "/msg/" + roomid, msg);
             }

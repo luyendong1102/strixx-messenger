@@ -20,9 +20,8 @@ import java.util.UUID;
 @Component
 public class UserHandshakeHandler extends AbstractHandshakeHandler {
 
-    @Autowired
-    UserRepository userRepository;
 
+    // event happened when http handshake, add user information to User of websocket
     @Override
     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
         UserSecure us = (UserSecure) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

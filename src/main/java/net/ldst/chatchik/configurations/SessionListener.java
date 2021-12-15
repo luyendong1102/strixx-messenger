@@ -33,7 +33,7 @@ public class SessionListener implements HttpSessionListener {
 
     @Override
     public void sessionDestroyed(HttpSessionEvent se) {
-        User u = (User) se.getSession().getAttribute("userinfor");
+        User u = (User) se.getSession().getAttribute("userinfo");
         if (u == null) {
             HttpSessionListener.super.sessionDestroyed(se);
         }
@@ -51,6 +51,7 @@ public class SessionListener implements HttpSessionListener {
             roomRepository.delete(user.getOwnroom());
         }
         userRepository.delete(user);
+        log.info("user: " + u.getUsername() + " :: key:" + u.getKey() + " :: deleted by session destruction");
         HttpSessionListener.super.sessionDestroyed(se);
     }
 }
