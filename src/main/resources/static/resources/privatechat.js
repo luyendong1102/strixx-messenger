@@ -158,7 +158,7 @@ async function sendMessage(event) {
             devision.appendChild(context3);
             devision.appendChild(context4);
             devision.appendChild(context5);
-            devision.appendChild(context1);
+            devision.appendChild(context6);
             li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
             li.appendChild(devision);
             messageArea.appendChild(li);
