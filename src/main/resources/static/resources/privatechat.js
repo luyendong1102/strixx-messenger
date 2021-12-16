@@ -62,6 +62,8 @@ var message = {
 //     messageContent.value = 'IMG: ' + fileInput.value;
 // }
 
+
+
 function filterImg(element) {
     var regex = /^ IMG:.* $/;
     if (!regex.test(element.value)) {
@@ -259,19 +261,18 @@ function onMessageReceived(payload) {
 
     }
 
-
     if (message.type === 'IMAGE') {
         var uuuid = document.createElement('p');
         uuuid.textContent = message.author + ': ';
         uuuid.style.color = '#B4EF57';
-        var dataSrc = decrypt(key, message.content);
+        var dataSrc = message.content;
         var img = document.createElement('img');
         var ifImg = /^data:image.*$/;
 
         img.onclick = function () {
             resizeImg(img);
         }
-        img.src = decrypt(key, message.content);
+        img.src = message.content;
         img.setAttribute('class', 'message_img');
 
         if (!ifImg.test(dataSrc)) {
@@ -296,6 +297,7 @@ function onMessageReceived(payload) {
             li.appendChild(img);
             messageArea.appendChild(li);
             messageArea.scrollTop = messageArea.scrollHeight;
+            notifyMe(message);
             event.preventDefault();
             return;
         }
@@ -320,6 +322,7 @@ function onMessageReceived(payload) {
 
         messageArea.appendChild(li);
         messageArea.scrollTop = messageArea.scrollHeight;
+        notifyMe(message);
         return;
 
     }

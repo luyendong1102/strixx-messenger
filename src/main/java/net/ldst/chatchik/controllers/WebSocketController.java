@@ -67,6 +67,16 @@ public class WebSocketController {
             return;
         }
 
+        if (msg.getType().equals(ChatMessage.MessageType.IMAGE)) {
+            msg.setUserid(DigestUtils.md5DigestAsHex(userid.getBytes(StandardCharsets.UTF_8)));
+            room.getMembers().forEach(
+                    user -> {
+                        operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
+                    }
+            );
+            return;
+        }
+
         // encrypt data;
         String context = encrypMessageService.CBCDecrypter(userid, msg.getContent());
         msg.setUserid(DigestUtils.md5DigestAsHex(userid.getBytes(StandardCharsets.UTF_8)));

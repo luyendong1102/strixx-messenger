@@ -1,3 +1,40 @@
+var isOnIOS = navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPhone/i);
+
+if (!isOnIOS) {
+    Notification.requestPermission()
+}
+
+function notifyMe(message) {
+    if (isOnIOS) {
+        return;
+    }
+    if (!window.Notification) {
+        console.log('Browser does not support notifications.');
+    } else {
+        // check if permission is already granted
+        if (Notification.permission === 'granted') {
+            // show notification here
+            var notify = new Notification('New message received', {
+                body: message.author + ' sent message to room',
+            });
+        } else {
+            // request permission from user
+            Notification.requestPermission().then(function (p) {
+                if (p === 'granted') {
+                    // show notification here
+                    var notify = new Notification('New message received', {
+                        body: message.author + ' sent message to room',
+                    });
+                } else {
+                    console.log('User blocked notifications.');
+                }
+            }).catch(function (err) {
+                console.error(err);
+            });
+        }
+    }
+}
+
 function copyText() {
     var rooid = document.getElementById("copyText");
     var r = document.createRange();
@@ -30,9 +67,8 @@ async function imageChoose() {
 
     var reader = new FileReader();
     reader.onload = function () {
-        var encrypMessage = encrypt(key, reader.result);
         message.type = 'IMAGE';
-        message.content = encrypMessage;
+        message.content = reader.result;
     }
     reader.readAsDataURL(file);
     
