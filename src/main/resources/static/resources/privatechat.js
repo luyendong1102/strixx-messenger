@@ -186,7 +186,7 @@ async function sendMessage(event) {
     event.preventDefault();
 }
 
-function onMessageReceived(payload) {
+async function onMessageReceived(payload) {
 
     var message = JSON.parse(payload.body);
 
