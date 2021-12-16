@@ -210,3 +210,9 @@ li {
 #imagecontent:hover {
     background-color: rgba(255,255,255,0.3);
 }
+
+.message_vid {
+    max-height: 22.5%;
+    max-width: 40%;
+    border-radius: 10px;
+}

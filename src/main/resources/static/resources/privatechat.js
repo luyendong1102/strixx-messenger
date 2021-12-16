@@ -48,35 +48,19 @@ var message = {
     userid: ''
 };
 
-
 // image message
-function imageChoose() {
-    var file = document.querySelector('input[type=file]')['files'][0];
-    var reader = new FileReader();
-    console.log("next");
-    reader.onload = function () {
-        var encrypMessage = encrypt(key, reader.result);
-        message.type = 'IMAGE';
-        message.content = encrypMessage;
-    }
-    reader.readAsDataURL(file);
-    messageContent.value = 'IMG: ' + fileInput.value;
-}
-
-// fileInput.addEventListener("onchange", (event) => {
-//     imageChoose();
-//     event.preventDefault();
-// })
-
-// fileInput.setAttribute('change', 'imageChoose();');
-
-// messageContent.addEventListener("change", (event) => {
-//     var regex = /^ IMG:.* $/;
-//     if (!regex.test(messageContent.value)) {
-//         console.log("going to send valina message");
-//         message.type = 'CHAT';
+// function imageChoose() {
+//     var file = document.querySelector('input[type=file]')['files'][0];
+//     var reader = new FileReader();
+//     console.log("next");
+//     reader.onload = function () {
+//         var encrypMessage = encrypt(key, reader.result);
+//         message.type = 'IMAGE';
+//         message.content = encrypMessage;
 //     }
-// })
+//     reader.readAsDataURL(file);
+//     messageContent.value = 'IMG: ' + fileInput.value;
+// }
 
 function filterImg(element) {
     var regex = /^ IMG:.* $/;
@@ -86,7 +70,7 @@ function filterImg(element) {
     }
 }
 
-function sendMessage(event) {
+async function sendMessage(event) {
 
     // command section
     if (stompClient) {
@@ -135,6 +119,15 @@ function sendMessage(event) {
             return;
         }
 
+        if (/^[/]ROOMSIZE [0-9]+$/.test(messageContent.value)) {
+            message.type = 'ROOMSIZE';
+            message.content = messageContent.value;
+            stompClient.send("/app/send.command", {}, JSON.stringify(message));
+            messageContent.value = '';
+            event.preventDefault();
+            return;
+        }
+
         if (messageContent.value === '/UNLOCK') {
             message.type = 'UNLOCK';
             stompClient.send("/app/send.command", {}, JSON.stringify(message));
@@ -157,7 +150,7 @@ function sendMessage(event) {
             context3.textContent = "/LOCK : Lock room only admin";
             context4.textContent = "/UNLOCK : Unlock room only admin";
             context5.textContent = "/CURMEM : Get current member";
-            context6.textContent = "/KICK : Kickmember";
+            context6.textContent = "/ROOMSIZE : /ROOMSIZE <new_max_member> only admin";
             devision.appendChild(context1);
             devision.appendChild(context2);
             devision.appendChild(context3);
@@ -204,72 +197,19 @@ function onMessageReceived(payload) {
     var devision = document.createElement('div');
     var li = document.createElement('li');
 
-    if (message.type === 'APPROVED') {
-        uuid.textContent = message.author;
-        uuid.style.color = '#419CF2';
-        statusSpan.textContent = " JOINED";
-        statusSpan.style.color = 'green';
-        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
-        devision.appendChild(uuid);
-        devision.appendChild(statusSpan);
-        li.appendChild(devision);
-
-        messageArea.appendChild(li);
-        messageArea.scrollTop = messageArea.scrollHeight;
-        return;
-    }
-
-    if (message.type === 'NEWLEAD') {
-        statusSpan.textContent = "YOUR ARE NOW ADMIN";
-        statusSpan.style.color = 'green';
-        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
-        devision.appendChild(statusSpan);
-        li.appendChild(devision);
-
-        messageArea.appendChild(li);
-        messageArea.scrollTop = messageArea.scrollHeight;
-        return;
-    }
-
-    if (message.type === 'LEAVE') {
-
-        uuid.textContent = message.author;
-        uuid.style.color = '#419CF2';
-        statusSpan.textContent = " LEAVED";
-        statusSpan.style.color = 'red';
-        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
-        devision.appendChild(uuid);
-        devision.appendChild(statusSpan);
-        li.appendChild(devision);
-
-        messageArea.appendChild(li);
-        messageArea.scrollTop = messageArea.scrollHeight;
-
-        if (message.userid === hashKey) {
-            socket.close();
-            window.location.replace("/")
-            return;
-        }
-
-        return;
-    }
-
     if (message.type === 'NOTAPV') {
         socket.close();
         window.location.replace("/")
         return;
     }
 
-    if (message.type === 'PENDDING') {
-        uuid.textContent = message.author;
-        uuid.style.color = '#419CF2';
-        statusSpan.textContent = " WAITING FOR HOST";
+    if (message.type === 'NOTICE') {
+        statusSpan.textContent = message.content;
         statusSpan.style.color = 'green';
         li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
         devision.appendChild(uuid);
         devision.appendChild(statusSpan);
         li.appendChild(devision);
-
         messageArea.appendChild(li);
         messageArea.scrollTop = messageArea.scrollHeight;
         return;
@@ -319,57 +259,37 @@ function onMessageReceived(payload) {
 
     }
 
-    if (message.type === 'LOCK') {
-        statusSpan.textContent = "ROOM LOCKED";
-        statusSpan.style.color = 'green';
-        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
-        devision.appendChild(uuid);
-        devision.appendChild(statusSpan);
-        li.appendChild(devision);
-
-        messageArea.appendChild(li);
-        messageArea.scrollTop = messageArea.scrollHeight;
-        return;
-    }
-
-    if (message.type === 'CURMEM') {
-        statusSpan.textContent = message.author;
-        statusSpan.style.color = 'green';
-        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
-        devision.appendChild(uuid);
-        devision.appendChild(statusSpan);
-        li.appendChild(devision);
-
-        messageArea.appendChild(li);
-        messageArea.scrollTop = messageArea.scrollHeight;
-        return;
-    }
-
-    if (message.type === 'UNLOCK') {
-        statusSpan.textContent = "ROOM UNLOCKED";
-        statusSpan.style.color = 'red';
-        li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
-        devision.appendChild(uuid);
-        devision.appendChild(statusSpan);
-        li.appendChild(devision);
-
-        messageArea.appendChild(li);
-        messageArea.scrollTop = messageArea.scrollHeight;
-        return;
-    }
 
     if (message.type === 'IMAGE') {
         var uuuid = document.createElement('p');
         uuuid.textContent = message.author + ': ';
         uuuid.style.color = '#B4EF57';
+        var dataSrc = decrypt(key, message.content);
         var img = document.createElement('img');
-        img.setAttribute('class', 'message_img');
-        img.src = decrypt(key, message.content);
-        img.alt = 'message image';
-        // img.setAttribute('onclick', 'resizeImg(this);');
+        var ifImg = /^data:image.*$/;
+
         img.onclick = function () {
             resizeImg(img);
         }
+        img.src = decrypt(key, message.content);
+        img.setAttribute('class', 'message_img');
+
+        if (!ifImg.test(dataSrc)) {
+            img = document.createElement('video');
+            img.autoplay = 'autoplay';
+            img.controls = true;
+            img.muted = true;
+            img.loop = true;
+            img.setAttribute('class', 'message_vid');
+            img.onclick = null;
+            var source = document.createElement('source');
+            source.src = dataSrc;
+            source.type = 'video/mp4';
+            img.removeAttribute('src');
+            img.appendChild(source);
+        }
+        img.alt = 'rendering error';
+
         if (message.userid !== hashKey) {
             li.style = 'list-style-type:none; margin-top:10px; display:block;';
             li.appendChild(uuuid);

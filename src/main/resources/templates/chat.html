@@ -13,6 +13,9 @@
         integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
+    <script src="/resources/base64-string.js"></script>
+    <script src="/resources/lz-string.js"></script>
+    <script src="/resources/lz-string.min.js"></script>
 </head>
 
 <body id="boody">
@@ -41,7 +44,7 @@
             <div class="image_chooser">
                 <label for="img_form" id="select_img"
                     style="background: url(/resources/IMAGE.svg) no-repeat; height:6.5vh">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>
-                <input type="file" id="img_form" style="display: none;" onchange="imageChoose();" />
+                <input type="file" id="img_form" style="display: none;" onchange="imageChoose();" accept=".jpg,.png,.pdf,.mov,.mp4,.jpeg"/>
             </div>
             <button type="submit" style="
                       background-color:#8441ab; 

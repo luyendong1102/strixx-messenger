@@ -107,7 +107,8 @@ public class WebSocketController {
 
         // when user id owner
         if (u.getOwnroom().getRoomid().equals(msg.getRoomid())) {
-            msg.setType(ChatMessage.MessageType.APPROVED);
+            msg.setType(ChatMessage.MessageType.NOTICE);
+            msg.setContent(u.getUsername() + " JOINED");
             r.getMembers().forEach(
                     user -> {
                         operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
@@ -128,7 +129,8 @@ public class WebSocketController {
 
             if (r.getOwner().getKey().equals(u.getKey())) {
                 roomService.AddMember(u, r);
-                msg.setType(ChatMessage.MessageType.APPROVED);
+                msg.setType(ChatMessage.MessageType.NOTICE);
+                msg.setContent(u.getUsername() + " JOINED");
                 r.getMembers().forEach(
                         user -> {
                             operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
@@ -137,7 +139,8 @@ public class WebSocketController {
                 return;
             }
 
-            msg.setType(ChatMessage.MessageType.PENDDING);
+            msg.setType(ChatMessage.MessageType.NOTICE);
+            msg.setContent(u.getUsername() + " WATING FOR HOST");
             operator.convertAndSendToUser(u.getKey(), "/msg/" + roomid, msg);
             String ownerkey = r.getOwner().getKey();
             r.getMembers().forEach(
@@ -161,7 +164,8 @@ public class WebSocketController {
 
         // when there is no interceptor
         roomService.AddMember(u, r);
-        msg.setType(ChatMessage.MessageType.APPROVED);
+        msg.setType(ChatMessage.MessageType.NOTICE);
+        msg.setContent(u.getUsername() + " JOINED");
         r.getMembers().forEach(
                 user -> {
                     operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
@@ -211,11 +215,13 @@ public class WebSocketController {
                 r.setOwner(r.getMembers().iterator().next());
                 roomRepository.save(r);
                 u.setOwnroom(null);
-                msg.setType(ChatMessage.MessageType.NEWLEAD);
+                msg.setType(ChatMessage.MessageType.NOTICE);
+                msg.setContent("YOUR ARE THE ADMIN NOW");
                 operator.convertAndSendToUser(r.getMembers().iterator().next().getKey(), "/msg/" + roomid, msg);
             }
 
-            msg.setType(ChatMessage.MessageType.LEAVE);
+            msg.setType(ChatMessage.MessageType.NOTICE);
+            msg.setContent(u.getUsername() + " LEAVE");
             r.getMembers().forEach(
                     user -> {
                         operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
@@ -230,6 +236,8 @@ public class WebSocketController {
             if (r.getOwner().getKey().equals(u.getKey())) {
                 r.setIs_locked(true);
                 roomRepository.save(r);
+                msg.setType(ChatMessage.MessageType.NOTICE);
+                msg.setContent("ROOM LOCKED");
                 r.getMembers().forEach(
                         user -> {
                             operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
@@ -242,9 +250,37 @@ public class WebSocketController {
 
         // unlock command
         if (msg.getType().equals(ChatMessage.MessageType.UNLOCK)) {
-            if (u.getOwnroom().getRoomid().equals(r.getRoomid())) {
+            if (r.getOwner().getKey().equals(u.getKey())) {
                 r.setIs_locked(false);
                 roomRepository.save(r);
+                log.info("UNLOCK ROOM " + roomid);
+                msg.setType(ChatMessage.MessageType.NOTICE);
+                msg.setContent("ROOM UNLOCKED");
+                r.getMembers().forEach(
+                        user -> {
+                            operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
+                        }
+                );
+                return;
+            }
+            return;
+        }
+
+        // we need a notification type :)
+        if (msg.getType().equals(ChatMessage.MessageType.ROOMSIZE)) {
+            if (r.getOwner().getKey().equals(u.getKey())) {
+                String newSize = msg.getContent().replace("/ROOMSIZE","");
+                int actualSize = Integer.parseInt(newSize.trim());
+                if (actualSize == 0) {
+                    msg.setType(ChatMessage.MessageType.NOTICE);
+                    msg.setContent("Room cannot be 0 util there's no one inside");
+                    operator.convertAndSendToUser(u.getKey(), "/msg/" + roomid, msg);
+                    return;
+                }
+                r.setMax_member(actualSize);
+                roomRepository.save(r);
+                msg.setType(ChatMessage.MessageType.NOTICE);
+                msg.setContent("NEW ROOM SIZE " + actualSize);
                 r.getMembers().forEach(
                         user -> {
                             operator.convertAndSendToUser(user.getKey(), "/msg/" + roomid, msg);
@@ -257,9 +293,11 @@ public class WebSocketController {
 
         // current member
         if (msg.getType().equals(ChatMessage.MessageType.CURMEM)) {
+            msg.setType(ChatMessage.MessageType.NOTICE);
             r.getMembers().forEach(
                     user -> {
                         msg.setAuthor(user.getUsername());
+                        msg.setContent(user.getUsername() + " CURRENTLY IN ROOM");
                         operator.convertAndSendToUser(u.getKey(), "/msg/" + roomid, msg);
                     }
             );
@@ -269,12 +307,17 @@ public class WebSocketController {
         // approve user to room
         if (msg.getType().equals(ChatMessage.MessageType.APPROVE)) {
             if (r.getOwner().getKey().equals(u.getKey())) {
-                User user = userRepository.findByUserName(msg.getContent()).get();
+                Optional<User> uu = userRepository.findByUserName(msg.getContent());
+                if (uu.isEmpty()) {
+                    return;
+                }
+                User user = uu.get();
                 if (r.getMembers().size() >= r.getMax_member()) {
                     return;
                 }
                 r = roomService.AddFromWaitingList(user, r);
-                msg.setType(ChatMessage.MessageType.APPROVED);
+                msg.setType(ChatMessage.MessageType.NOTICE);
+                msg.setContent(user.getUsername() + " JOINED");
                 r.getMembers().forEach(
                         userr -> {
                             operator.convertAndSendToUser(userr.getKey(), "/msg/" + roomid, msg);
