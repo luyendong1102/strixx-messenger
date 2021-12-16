@@ -220,7 +220,7 @@ li {
 #qrcode {
     position: fixed;
     z-index : 800;
-    left: 40%;
+    left: 30%;
     top: 25%;
     text-align: center;
     display: none;
