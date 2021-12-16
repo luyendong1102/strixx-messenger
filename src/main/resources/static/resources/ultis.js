@@ -74,6 +74,22 @@ async function imageChoose() {
     
 }
 
+var qrcode = new QRCode("qrcode", {
+    text: window.location.host + '/invite/' + rroomid,
+    width: 250,
+    height: 250,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+});
+
+function genQRCode () {
+    var block = document.getElementById('qrcode');
+    block.style.display = 'block';
+    qrcode.clear(); // clear the code.
+    qrcode.makeCode(window.location.host + '/invite/' + rroomid);
+}
+
 // function imageChoose() {
 //     var file = document.querySelector('input[type=file]')['files'][0];
 //     if ((file.size / 20 / 1024 / 1024) > 1) {

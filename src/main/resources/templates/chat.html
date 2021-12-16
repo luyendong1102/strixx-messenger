@@ -17,6 +17,9 @@
     <script src="/resources/base64-string.js"></script>
     <script src="/resources/lz-string.js"></script>
     <script src="/resources/lz-string.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+        integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body id="boody">
@@ -45,7 +48,8 @@
             <div class="image_chooser">
                 <label for="img_form" id="select_img"
                     style="background: url(/resources/IMAGE.svg) no-repeat; height:6.5vh">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</label>
-                <input type="file" id="img_form" style="display: none;" onchange="imageChoose();" accept=".jpg,.png,.pdf,.mov,.mp4,.jpeg"/>
+                <input type="file" id="img_form" style="display: none;" onchange="imageChoose();"
+                    accept=".jpg,.png,.pdf,.mov,.mp4,.jpeg" />
             </div>
             <button type="submit" style="
                       background-color:#8441ab; 
@@ -62,6 +66,9 @@
     </div>
     <div id="imageviewer" onclick="this.style.display='none';">
         <img id="imagecontent">
+    </div>
+
+    <div id="qrcode" onclick="this.style.display='none';">
     </div>
 
     <script>

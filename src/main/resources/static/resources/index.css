@@ -216,3 +216,12 @@ li {
     max-width: 40%;
     border-radius: 10px;
 }
+
+#qrcode {
+    position: fixed;
+    z-index : 800;
+    left: 40%;
+    top: 25%;
+    text-align: center;
+    display: none;
+}

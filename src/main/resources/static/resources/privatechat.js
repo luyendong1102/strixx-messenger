@@ -90,6 +90,13 @@ async function sendMessage(event) {
             window.location.replace("/")
         }
 
+        if (messageContent.value === '/QR') {
+            genQRCode();
+            messageContent.value = '';
+            event.preventDefault();
+            return;
+        }
+
         if (messageContent.value === '/INVITE') {
             messageContent.value = '';
             uuid.textContent = window.location.host + '/invite/' + rroomid;
@@ -147,18 +154,21 @@ async function sendMessage(event) {
             var context4 = document.createElement('p');
             var context5 = document.createElement('p');
             var context6 = document.createElement('p');
+            var context7 = document.createElement('p');
             context1.innerHTML = "/INVITE : Generate an invitelink";
             context2.textContent = "/LEAVE : Leave conversation";
             context3.textContent = "/LOCK : Lock room only admin";
             context4.textContent = "/UNLOCK : Unlock room only admin";
             context5.textContent = "/CURMEM : Get current member";
             context6.textContent = "/ROOMSIZE : /ROOMSIZE <new_max_member> only admin";
+            context7.textContent = "/QR : Generate QR code to invite people";
             devision.appendChild(context1);
             devision.appendChild(context2);
             devision.appendChild(context3);
             devision.appendChild(context4);
             devision.appendChild(context5);
             devision.appendChild(context6);
+            devision.appendChild(context7);
             li.style = 'list-style-type:none; margin-top:10px; justify-content: left;';
             li.appendChild(devision);
             messageArea.appendChild(li);
