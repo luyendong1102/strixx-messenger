@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.swing.text.html.Option;
 import java.util.Optional;
 
 @Controller
@@ -100,6 +101,12 @@ public class PageController {
     // todo secure problem
     @GetMapping("/chat/{roomid}")
     public String chatroompage (HttpServletRequest request, @PathVariable String roomid, Model model) {
+
+        Optional<Room> room = roomRepository.findByRoomId(roomid);
+        if (room.isEmpty()) {
+            return "redirect:/greeting";
+        }
+
         User u = (User) request.getSession().getAttribute("userinfo");
         model.addAttribute("userid", u.getKey());
         model.addAttribute("username", u.getUsername());
@@ -110,11 +117,14 @@ public class PageController {
     
     @GetMapping("/invite/{roomid}")
     public String invitetepage (HttpServletRequest request, @PathVariable String roomid, Model model) {
+        User u = (User) request.getSession().getAttribute("userinfo");
         Optional<Room> room = roomRepository.findByRoomId(roomid);
         if (room.isEmpty()) {
+            if (u != null) {
+                return "redirect:/greeting";
+            }
             return "redirect:/";
         }
-        User u = (User) request.getSession().getAttribute("userinfo");
         if (u == null) {
             log.info("new anonymous user click invite");
             return "redirect:/prejoin/" + roomid;

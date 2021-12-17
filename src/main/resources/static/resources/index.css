@@ -22,13 +22,13 @@ p, button, input, select, textarea, span, tr, td, label {
 }
 
 #description {
-    font-size: 3vh;
+    font-size: 5vh;
     text-align: center;
     margin-top:25vh;
 }
 
 #credit {
-    margin-top: 20vh;
+    margin-top: 35vh;
     text-align: right;
 }
 
@@ -45,6 +45,7 @@ p, button, input, select, textarea, span, tr, td, label {
     font-size: 5vh;
     color: #fff;
     padding-left: 5vh;
+    margin-top: 10vh;
 }
 
 #dess {
@@ -220,8 +221,8 @@ li {
 #qrcode {
     position: fixed;
     z-index : 800;
-    left: 30%;
-    top: 25%;
-    text-align: center;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, 0);
     display: none;
 }

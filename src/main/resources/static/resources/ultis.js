@@ -62,22 +62,19 @@ async function imageChoose() {
         alert("File must be smaller than 20MB");
         return;
     }
-
-    messageContent.value = 'IMG: ' + fileInput.value;
-
     var reader = new FileReader();
     reader.onload = function () {
         message.type = 'IMAGE';
         message.content = reader.result;
     }
     reader.readAsDataURL(file);
-    
+    messageContent.value = 'IMG: ' + fileInput.value;    
 }
 
 var qrcode = new QRCode("qrcode", {
     text: window.location.host + '/invite/' + rroomid,
-    width: 250,
-    height: 250,
+    width: window.screen.height / 3,
+    height: window.screen.height / 3,
     colorDark: "#000000",
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.H
