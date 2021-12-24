@@ -23,13 +23,18 @@ html *
 }
 
 #description {
+    position: absolute;
     font-size: 5vh;
     text-align: center;
-    margin-top:25vh;
+    left: 50%;
+    transform: translate(-50%, 0);
+    top: 40%;
 }
 
 #credit {
-    margin-top: 35vh;
+    position: absolute;
+    right: 5vh;
+    bottom: 5vh;
     text-align: right;
 }
 
@@ -50,8 +55,9 @@ html *
 }
 
 #dess {
-    margin-top: 4vh;
-    padding-left: 5vh; color: #fff;
+    position: absolute;
+    top: 40vh;
+    padding: 5vh; color: #fff;
 }
 
 .config {
